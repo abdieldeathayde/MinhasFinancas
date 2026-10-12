@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS app_user (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(180) NOT NULL UNIQUE,
+  password_hash VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS category (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  name VARCHAR(80) NOT NULL,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('INCOME','EXPENSE')),
+  color VARCHAR(16),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, name, type)
+);
+CREATE TABLE IF NOT EXISTS transaction_entry (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  category_id BIGINT REFERENCES category(id) ON DELETE SET NULL,
+  description VARCHAR(180) NOT NULL,
+  amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+  type VARCHAR(20) NOT NULL CHECK (type IN ('INCOME','EXPENSE')),
+  transaction_date DATE NOT NULL,
+  notes VARCHAR(1000),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_transaction_user_date ON transaction_entry(user_id, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_category_user ON category(user_id);
